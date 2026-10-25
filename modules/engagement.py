@@ -54,12 +54,29 @@ class HeadPoseEstimator:
                 self.use_mediapipe = False
 
         if not self.use_mediapipe:
-            cascade_file = CASCADE_PATH if os.path.exists(CASCADE_PATH) else cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-            if os.path.exists(cascade_file):
-                self.face_cascade = cv2.CascadeClassifier(cascade_file)
-            eye_file = EYE_CASCADE_PATH if os.path.exists(EYE_CASCADE_PATH) else cv2.data.haarcascades + "haarcascade_eye.xml"
-            if os.path.exists(eye_file):
-                self.eye_cascade = cv2.CascadeClassifier(eye_file)
+            cascade_file = CASCADE_PATH if os.path.exists(CASCADE_PATH) else None
+            eye_file = EYE_CASCADE_PATH if os.path.exists(EYE_CASCADE_PATH) else None
+            if hasattr(cv2, "data") and hasattr(cv2.data, "haarcascades"):
+                if not cascade_file:
+                    cand = os.path.join(cv2.data.haarcascades, "haarcascade_frontalface_default.xml")
+                    if os.path.exists(cand):
+                        cascade_file = cand
+                if not eye_file:
+                    cand = os.path.join(cv2.data.haarcascades, "haarcascade_eye.xml")
+                    if os.path.exists(cand):
+                        eye_file = cand
+
+            if hasattr(cv2, "CascadeClassifier"):
+                try:
+                    if cascade_file and os.path.exists(cascade_file):
+                        self.face_cascade = cv2.CascadeClassifier(cascade_file)
+                except Exception:
+                    self.face_cascade = None
+                try:
+                    if eye_file and os.path.exists(eye_file):
+                        self.eye_cascade = cv2.CascadeClassifier(eye_file)
+                except Exception:
+                    self.eye_cascade = None
 
         # Key landmark indices for pose estimation
         self.NOSE_TIP = 1

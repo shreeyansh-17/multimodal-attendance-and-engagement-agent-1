@@ -48,9 +48,16 @@ class FaceDetector:
                 self.use_mediapipe = False
 
         if not self.use_mediapipe:
-            cascade_file = CASCADE_PATH if os.path.exists(CASCADE_PATH) else cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-            if os.path.exists(cascade_file):
-                self.cascade = cv2.CascadeClassifier(cascade_file)
+            cascade_file = CASCADE_PATH if os.path.exists(CASCADE_PATH) else None
+            if not cascade_file and hasattr(cv2, "data") and hasattr(cv2.data, "haarcascades"):
+                default_cascade = os.path.join(cv2.data.haarcascades, "haarcascade_frontalface_default.xml")
+                if os.path.exists(default_cascade):
+                    cascade_file = default_cascade
+            if cascade_file and os.path.exists(cascade_file) and hasattr(cv2, "CascadeClassifier"):
+                try:
+                    self.cascade = cv2.CascadeClassifier(cascade_file)
+                except Exception:
+                    self.cascade = None
 
         # Simple centroid-based tracker (no external cloud dependency)
         self._next_id = 1
